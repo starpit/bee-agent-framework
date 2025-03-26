@@ -81,6 +81,9 @@ class AgentWorkflow:
             def __init__(self):
                 import jsonpickle
                 self.final_answer = jsonpickle.encode({"inputs": inputs, "workflow": workflow}, make_refs=False)
+                if getenv('DRY_RUN_FILE', None) is not None:
+                    with open(getenv('DRY_RUN_FILE'), 'w') as f:
+                        f.write(self.final_answer)
         class DryRunResult:
             result = DryRunAnswer()
         class DryRun:
