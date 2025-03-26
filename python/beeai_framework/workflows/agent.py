@@ -15,7 +15,7 @@
 import random
 import string
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, Self, overload
+from typing import Any, Optional, Self, overload
 
 from pydantic import BaseModel, InstanceOf
 
@@ -63,7 +63,9 @@ class AgentWorkflow:
     def __init__(self, name: str = "AgentWorkflow") -> None:
         self.workflow = Workflow(name=name, schema=Schema)
 
-    def run(self, inputs: Sequence[AgentWorkflowInput | AnyMessage]) -> Run[WorkflowRun[Any, Any]]:
+    def run(self, inputs: Sequence[AgentWorkflowInput | AnyMessage], dry_run: Optional[bool] = False) -> Run[WorkflowRun[Any, Any]]:
+        if dry_run:
+            return self.dry_run(inputs)
         schema = Schema(
             inputs=[
                 input if isinstance(input, AgentWorkflowInput) else AgentWorkflowInput.from_message(input)
@@ -71,6 +73,27 @@ class AgentWorkflow:
             ],
         )
         return self.workflow.run(schema)
+
+    def dry_run(self, inputs: Sequence[AgentWorkflowInput | AnyMessage]) -> Run[WorkflowRun[Any, Any]]:
+        workflow = self
+        class DryRunAnswer:
+            def __init__(self):
+                import jsonpickle
+                self.final_answer = jsonpickle.encode({"inputs": inputs, "workflow": workflow}, make_refs=False)
+        class DryRunResult:
+            result = DryRunAnswer()
+        class DryRun:
+            def on(self,a,b):
+                return self
+            async def _run_tasks(self):
+                return DryRunResult()
+            def __await__(self):
+                return self._run_tasks().__await__()
+        class DryRunContext:
+            @staticmethod
+            def enter():
+                return DryRun()
+        return DryRunContext.enter()
 
     def del_agent(self, name: str) -> "AgentWorkflow":
         self.workflow.delete_step(name)
