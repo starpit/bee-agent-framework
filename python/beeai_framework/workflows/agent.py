@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from os import getenv
 import random
 import string
 from collections.abc import Awaitable, Callable, Sequence
@@ -63,7 +64,7 @@ class AgentWorkflow:
     def __init__(self, name: str = "AgentWorkflow") -> None:
         self.workflow = Workflow(name=name, schema=Schema)
 
-    def run(self, inputs: Sequence[AgentWorkflowInput | AnyMessage], dry_run: Optional[bool] = False) -> Run[WorkflowRun[Any, Any]]:
+    def run(self, inputs: Sequence[AgentWorkflowInput | AnyMessage], dry_run: Optional[bool] = (getenv('DRY_RUN', 'False') == 'True')) -> Run[WorkflowRun[Any, Any]]:
         if dry_run:
             return self.dry_run(inputs)
         schema = Schema(
