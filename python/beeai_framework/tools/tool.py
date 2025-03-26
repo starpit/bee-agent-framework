@@ -79,6 +79,7 @@ class Tool(Generic[TInput, TRunOptions, TOutput], ABC):
     async def _run(self, input: TInput, options: TRunOptions | None, context: RunContext) -> TOutput:
         pass
 
+    # Allow Tools to be pickled
     def __getstate__(self) -> dict[str, any]:
         return {
             "name": self.name,
