@@ -109,13 +109,13 @@ class AgentWorkflow:
         # below.  This is helpful for jsonpickling a workflow and
         # other debugging tasks.
         agent_metadata = AgentMetaDetail(
-            name=name,
-            description=role,
+            name=name if name is not None else "",
+            description=role if role is not None else "",
             tools=tools if tools is not None else [],
             instructions=instructions,
-            llm_provider_id=llm.provider_id,
-            llm_model_id=llm.model_id,
-            llm_parameters=llm.parameters,
+            llm_provider_id=llm.provider_id if llm is not None else instance._llm.provider_id,
+            llm_model_id=llm.model_id if llm is not None else instance._llm.model_id,
+            llm_parameters=llm.parameters if llm is not None else instance._llm.parameters,
         )
 
         def create_agent(memory: BaseMemory) -> ToolCallingAgent:
